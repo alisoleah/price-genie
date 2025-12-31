@@ -150,3 +150,36 @@
 - [ ] Implement soft deletes for products
 - [ ] Add audit logging tables
 - [x] Optimize query performance with composite indexes
+
+
+## Current Sprint: Semantic Search & Embeddings
+- [x] Create embeddings service using sentence-transformers API
+- [x] Implement cosine similarity search function
+- [x] Add embedding generation for new products
+- [x] Implement fuzzy product matching algorithm
+- [x] Update search to use semantic similarity
+- [ ] Test semantic search with product variations
+
+## Next Sprint: Live Scraper Testing
+- [ ] Test Amazon UAE scraper with real products
+- [ ] Test Noon scraper with real products
+- [ ] Test Talabat scraper with real products
+- [ ] Test Careem scraper with real products
+- [ ] Handle edge cases (out of stock, price not found)
+- [ ] Add error logging and monitoring
+- [ ] Optimize scraping performance
+
+## Next Sprint: S3 Image Storage
+- [x] Implement product image upload to S3
+- [x] Add image URL storage in database
+- [x] Create image processing utilities (resize, optimize)
+- [x] Implement image scraping from platforms
+- [x] Add fallback for missing images
+- [ ] Test image upload and retrieval
+
+## Next Sprint: Scheduled Jobs
+- [x] Implement cron job for automated scraping
+- [x] Schedule price updates every 6 hours
+- [x] Add job monitoring and alerting
+- [x] Implement retry logic for failed jobs
+- [ ] Add job status dashboard

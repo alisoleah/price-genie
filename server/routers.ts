@@ -3,6 +3,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { semanticSearch, processUnmatchedProducts } from "./productMatcher";
 import * as db from "./db";
 import { optimizeBasket, generateDeepLink } from "./basketOptimizer";
 
@@ -63,6 +64,16 @@ export const appRouter = router({
           staleness: db.calculateStaleness(price.scrapedAt),
           priceInAED: price.price / 100, // Convert fils to AED
         }));
+      }),
+
+    semanticSearch: publicProcedure
+      .input(z.object({
+        query: z.string(),
+        limit: z.number().min(1).max(50).default(10),
+      }))
+      .query(async ({ input }) => {
+        const results = await semanticSearch(input.query, input.limit);
+        return results;
       }),
   }),
 
