@@ -4,6 +4,7 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import Header from "./components/Header";
 import Home from "./pages/Home";
 import Search from "./pages/Search";
 import ProductDetail from "./pages/ProductDetail";
@@ -16,7 +17,9 @@ import Alerts from "./pages/Alerts";
 
 function Router() {
   return (
-    <Switch>
+    <>
+      <Header />
+      <Switch>
       <Route path="/" component={Home} />
       <Route path="/search" component={Search} />
       <Route path="/product/:id" component={ProductDetail} />
@@ -29,6 +32,7 @@ function Router() {
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
+    </>
   );
 }
 
