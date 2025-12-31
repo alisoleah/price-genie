@@ -661,3 +661,99 @@ export async function getPopularSearches(limit: number = 10) {
   
   return result;
 }
+
+
+// ============================================================================
+// Price History & Trends
+// ============================================================================
+
+export async function getPriceHistory(
+  productId: number,
+  days: number = 30
+): Promise<Array<{
+  date: Date;
+  platform: string;
+  price: number;
+  availability: string;
+}>> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { priceSnapshots, platforms, rawProducts } = await import("../drizzle/schema");
+  
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  
+  const history = await db
+    .select({
+      date: priceSnapshots.scrapedAt,
+      platform: platforms.name,
+      price: priceSnapshots.price,
+      availability: priceSnapshots.availability,
+    })
+    .from(priceSnapshots)
+    .innerJoin(rawProducts, eq(priceSnapshots.rawProductId, rawProducts.id))
+    .innerJoin(platforms, eq(rawProducts.platformId, platforms.id))
+    .where(
+      and(
+        eq(rawProducts.matchedProductId, productId),
+        gte(priceSnapshots.scrapedAt, startDate)
+      )
+    )
+    .orderBy(priceSnapshots.scrapedAt);
+  
+  return history;
+}
+
+export async function getPriceStats(productId: number, days: number = 30): Promise<{
+  lowest: number;
+  highest: number;
+  average: number;
+  current: number;
+  trend: "up" | "down" | "stable";
+}> {
+  const db = await getDb();
+  if (!db) {
+    return { lowest: 0, highest: 0, average: 0, current: 0, trend: "stable" };
+  }
+  
+  const { priceSnapshots, rawProducts } = await import("../drizzle/schema");
+  
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  
+  const prices = await db
+    .select({ price: priceSnapshots.price, date: priceSnapshots.scrapedAt })
+    .from(priceSnapshots)
+    .innerJoin(rawProducts, eq(priceSnapshots.rawProductId, rawProducts.id))
+    .where(
+      and(
+        eq(rawProducts.matchedProductId, productId),
+        gte(priceSnapshots.scrapedAt, startDate)
+      )
+    )
+    .orderBy(priceSnapshots.scrapedAt);
+  
+  if (prices.length === 0) {
+    return { lowest: 0, highest: 0, average: 0, current: 0, trend: "stable" };
+  }
+  
+  const priceValues = prices.map(p => p.price);
+  const lowest = Math.min(...priceValues);
+  const highest = Math.max(...priceValues);
+  const average = priceValues.reduce((sum, p) => sum + p, 0) / priceValues.length;
+  const current = priceValues[priceValues.length - 1];
+  
+  // Calculate trend based on first half vs second half
+  const midpoint = Math.floor(prices.length / 2);
+  const firstHalfAvg = priceValues.slice(0, midpoint).reduce((sum, p) => sum + p, 0) / midpoint;
+  const secondHalfAvg = priceValues.slice(midpoint).reduce((sum, p) => sum + p, 0) / (priceValues.length - midpoint);
+  
+  let trend: "up" | "down" | "stable" = "stable";
+  const changePercent = ((secondHalfAvg - firstHalfAvg) / firstHalfAvg) * 100;
+  
+  if (changePercent > 5) trend = "up";
+  else if (changePercent < -5) trend = "down";
+  
+  return { lowest, highest, average, current, trend };
+}

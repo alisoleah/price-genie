@@ -75,6 +75,26 @@ export const appRouter = router({
         const results = await semanticSearch(input.query, input.limit);
         return results;
       }),
+
+    getPriceHistory: publicProcedure
+      .input(z.object({
+        productId: z.number(),
+        days: z.number().min(7).max(365).default(30),
+      }))
+      .query(async ({ input }) => {
+        const history = await db.getPriceHistory(input.productId, input.days);
+        return history;
+      }),
+
+    getPriceStats: publicProcedure
+      .input(z.object({
+        productId: z.number(),
+        days: z.number().min(7).max(365).default(30),
+      }))
+      .query(async ({ input }) => {
+        const stats = await db.getPriceStats(input.productId, input.days);
+        return stats;
+      }),
   }),
 
   // User membership management

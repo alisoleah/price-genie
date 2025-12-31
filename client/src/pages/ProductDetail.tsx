@@ -15,6 +15,7 @@ import {
   XCircle
 } from "lucide-react";
 import { toast } from "sonner";
+import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/product/:id");
@@ -22,6 +23,16 @@ export default function ProductDetail() {
 
   const { data: prices, isLoading } = trpc.products.getPrices.useQuery(
     { productId },
+    { enabled: productId > 0 }
+  );
+
+  const { data: priceHistory } = trpc.products.getPriceHistory.useQuery(
+    { productId, days: 30 },
+    { enabled: productId > 0 }
+  );
+
+  const { data: priceStats } = trpc.products.getPriceStats.useQuery(
+    { productId, days: 30 },
     { enabled: productId > 0 }
   );
 
@@ -208,6 +219,11 @@ export default function ProductDetail() {
               </Card>
             ))}
         </div>
+
+        {/* Price History Chart */}
+        {priceHistory && priceStats && priceHistory.length > 0 && (
+          <PriceHistoryChart data={priceHistory} stats={priceStats} />
+        )}
 
         {/* Price Alert CTA */}
         <Card className="bg-accent/10 border-accent/20">

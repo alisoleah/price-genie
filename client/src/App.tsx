@@ -10,6 +10,7 @@ import ProductDetail from "./pages/ProductDetail";
 import Basket from "./pages/Basket";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
+import Notifications from "./pages/Notifications";
 import Assistant from "./pages/Assistant";
 import Alerts from "./pages/Alerts";
 
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/basket" component={Basket} />
       <Route path="/profile" component={Profile} />
       <Route path="/admin" component={Admin} />
+      <Route path="/notifications" component={Notifications} />
       <Route path="/assistant" component={Assistant} />
       <Route path="/alerts" component={Alerts} />
       <Route path="/404" component={NotFound} />

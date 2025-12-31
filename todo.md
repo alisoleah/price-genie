@@ -183,3 +183,31 @@
 - [x] Add job monitoring and alerting
 - [x] Implement retry logic for failed jobs
 - [ ] Add job status dashboard
+
+
+## Current Sprint: Price History Charts
+- [x] Create price history data aggregation functions
+- [x] Implement price trend calculation (up/down/stable)
+- [x] Build PriceHistoryChart component with Recharts
+- [x] Add time range selector (7d, 30d, 90d, all)
+- [x] Display lowest/highest/average prices
+- [x] Add price change indicators
+- [x] Integrate charts into ProductDetail page
+
+## Next Sprint: Push Notifications
+- [x] Set up web push notification service
+- [x] Implement notification permission request UI
+- [x] Create notification subscription management
+- [x] Add price drop notification triggers
+- [x] Add back-in-stock notification triggers
+- [x] Build notification preferences page
+- [ ] Test notifications across browsers
+
+## Next Sprint: Live Scraper Testing
+- [ ] Test Amazon UAE scraper with real products
+- [ ] Test Noon scraper with real products
+- [ ] Test Talabat scraper with real products
+- [ ] Test Careem scraper with real products
+- [ ] Handle anti-bot challenges
+- [ ] Add error recovery mechanisms
+- [ ] Optimize scraping performance
