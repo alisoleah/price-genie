@@ -15,6 +15,13 @@
       "when": 1765033125972,
       "tag": "0001_optimal_hex",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1767218951207,
+      "tag": "0002_deep_stephen_strange",
+      "breakpoints": true
     }
   ]
 }

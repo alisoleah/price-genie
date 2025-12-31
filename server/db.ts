@@ -1,4 +1,4 @@
-import { eq, and, desc, sql, inArray, or, like } from "drizzle-orm";
+import { eq, and, desc, sql, inArray, or, like, gte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, users, platforms, products, rawProducts, priceSnapshots,
@@ -561,4 +561,103 @@ export async function createPriceSnapshot(data: {
     availability: data.availability,
     scrapedAt: new Date(),
   });
+}
+
+
+// ============================================================================
+// Categories
+// ============================================================================
+
+export async function getAllCategories() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { categories } = await import("../drizzle/schema");
+  return await db.select().from(categories).where(eq(categories.isActive, true));
+}
+
+export async function getCategoryBySlug(slug: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const { categories } = await import("../drizzle/schema");
+  const result = await db.select().from(categories).where(eq(categories.slug, slug)).limit(1);
+  return result[0];
+}
+
+// ============================================================================
+// Search History & Analytics
+// ============================================================================
+
+export async function recordSearch(userId: number | null, query: string, resultsCount: number) {
+  const db = await getDb();
+  if (!db) return;
+  
+  const { searchHistory } = await import("../drizzle/schema");
+  await db.insert(searchHistory).values({
+    userId: userId || undefined,
+    query,
+    resultsCount,
+  });
+}
+
+export async function recordProductView(productId: number, userId: number | null, sessionId?: string) {
+  const db = await getDb();
+  if (!db) return;
+  
+  const { productViews } = await import("../drizzle/schema");
+  await db.insert(productViews).values({
+    productId,
+    userId: userId || undefined,
+    sessionId,
+  });
+}
+
+export async function getPopularProducts(limit: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { productViews, products } = await import("../drizzle/schema");
+  
+  // Get products with most views in last 7 days
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  
+  const result = await db
+    .select({
+      product: products,
+      viewCount: sql<number>`COUNT(${productViews.id})`,
+    })
+    .from(productViews)
+    .innerJoin(products, eq(productViews.productId, products.id))
+    .where(gte(productViews.createdAt, sevenDaysAgo))
+    .groupBy(products.id)
+    .orderBy(desc(sql`COUNT(${productViews.id})`))
+    .limit(limit);
+  
+  return result.map(r => r.product);
+}
+
+export async function getPopularSearches(limit: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { searchHistory } = await import("../drizzle/schema");
+  
+  // Get most common searches in last 30 days
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  const result = await db
+    .select({
+      query: searchHistory.query,
+      searchCount: sql<number>`COUNT(*)`,
+    })
+    .from(searchHistory)
+    .where(gte(searchHistory.createdAt, thirtyDaysAgo))
+    .groupBy(searchHistory.query)
+    .orderBy(desc(sql`COUNT(*)`))
+    .limit(limit);
+  
+  return result;
 }

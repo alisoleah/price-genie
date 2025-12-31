@@ -246,3 +246,64 @@ export const messages = mysqlTable("messages", {
 
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = typeof messages.$inferInsert;
+
+/**
+ * Product categories with hierarchical structure
+ */
+export const categories = mysqlTable("categories", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  parentId: int("parentId").references((): any => categories.id),
+  description: text("description"),
+  imageUrl: varchar("imageUrl", { length: 500 }),
+  displayOrder: int("displayOrder").default(0).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  parentIdx: index("parent_idx").on(table.parentId),
+  slugIdx: index("slug_idx").on(table.slug),
+}));
+
+export type Category = typeof categories.$inferSelect;
+export type InsertCategory = typeof categories.$inferInsert;
+
+/**
+ * Search history for analytics and suggestions
+ */
+export const searchHistory = mysqlTable("searchHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").references(() => users.id),
+  query: varchar("query", { length: 500 }).notNull(),
+  resultsCount: int("resultsCount").default(0).notNull(),
+  clickedProductId: int("clickedProductId").references(() => products.id),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  userIdx: index("user_idx").on(table.userId),
+  queryIdx: index("query_idx").on(table.query),
+  createdAtIdx: index("created_at_idx").on(table.createdAt),
+}));
+
+export type SearchHistory = typeof searchHistory.$inferSelect;
+export type InsertSearchHistory = typeof searchHistory.$inferInsert;
+
+/**
+ * Product views for popularity tracking
+ */
+export const productViews = mysqlTable("productViews", {
+  id: int("id").autoincrement().primaryKey(),
+  productId: int("productId").notNull().references(() => products.id),
+  userId: int("userId").references(() => users.id),
+  sessionId: varchar("sessionId", { length: 64 }),
+  referrer: varchar("referrer", { length: 500 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  productIdx: index("product_idx").on(table.productId),
+  userIdx: index("user_idx").on(table.userId),
+  sessionIdx: index("session_idx").on(table.sessionId),
+  createdAtIdx: index("created_at_idx").on(table.createdAt),
+}));
+
+export type ProductView = typeof productViews.$inferSelect;
+export type InsertProductView = typeof productViews.$inferInsert;

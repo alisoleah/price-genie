@@ -1,194 +1,167 @@
 import { Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { 
   Search, 
   ShoppingCart, 
   TrendingDown, 
   Sparkles,
   Bell,
-  BarChart3,
-  Zap
+  Zap,
+  Shield
 } from "lucide-react";
 import { getLoginUrl } from "@/const";
+import { PageTransition, FadeIn, SlideIn } from "@/components/PageTransition";
+import { motion } from "framer-motion";
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      {/* Hero Section */}
-      <div className="container py-8 space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-primary">PriceGenie</h1>
-          {isAuthenticated ? (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground hidden sm:inline">
-                {user?.name}
-              </span>
-              <Link href="/profile">
-                <Button variant="outline" size="sm">
-                  Profile
+    <PageTransition>
+      <div className="min-h-screen">
+        {/* Hero Section */}
+        <section className="relative overflow-hidden bg-gradient-to-b from-background via-background to-muted/20">
+          <div className="container py-20 md:py-32">
+            <div className="max-w-4xl mx-auto text-center space-y-8">
+              <FadeIn>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary border border-primary/20">
+                  <Sparkles className="w-4 h-4" />
+                  <span className="text-sm font-medium">AI-Powered Shopping</span>
+                </div>
+              </FadeIn>
+
+              <SlideIn delay={0.2}>
+                <h1 className="text-5xl md:text-7xl font-bold leading-tight">
+                  Find the Best Prices
+                  <br />
+                  <span className="text-gradient-primary">Across UAE</span>
+                </h1>
+              </SlideIn>
+
+              <SlideIn delay={0.4}>
+                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                  Compare prices from Amazon, Noon, Careem, and Talabat. Optimize your shopping
+                  basket with AI.
+                </p>
+              </SlideIn>
+
+              <SlideIn delay={0.6}>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Link href="/search">
+                    <Button size="lg" className="px-8 h-12 text-base hover:glow-primary transition-all">
+                      <Search className="w-5 h-5 mr-2" />
+                      Start Searching
+                    </Button>
+                  </Link>
+                  <Link href="/assistant">
+                    <Button size="lg" variant="outline" className="px-8 h-12 text-base">
+                      <Sparkles className="w-5 h-5 mr-2" />
+                      AI Assistant
+                    </Button>
+                  </Link>
+                  <Link href="/basket">
+                    <Button size="lg" variant="outline" className="px-8 h-12 text-base">
+                      <ShoppingCart className="w-5 h-5 mr-2" />
+                      My Basket
+                    </Button>
+                  </Link>
+                </div>
+              </SlideIn>
+
+              {!isAuthenticated && (
+                <SlideIn delay={0.8}>
+                  <p className="text-sm text-muted-foreground">
+                    <a href={getLoginUrl()} className="text-primary hover:underline">
+                      Sign in
+                    </a>{" "}
+                    to save your baskets and set price alerts
+                  </p>
+                </SlideIn>
+              )}
+            </div>
+          </div>
+
+          {/* Decorative gradient orbs */}
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl opacity-20" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-secondary/20 rounded-full blur-3xl opacity-20" />
+        </section>
+
+        {/* Features Section */}
+        <section className="py-20 bg-muted/20">
+          <div className="container">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="p-8 rounded-2xl bg-card border hover:shadow-lg transition-shadow"
+              >
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <TrendingDown className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Real-Time Prices</h3>
+                <p className="text-muted-foreground">
+                  Compare live prices across multiple e-commerce platforms in real-time with staleness indicators.
+                </p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="p-8 rounded-2xl bg-card border hover:shadow-lg transition-shadow"
+              >
+                <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center mb-4">
+                  <Zap className="w-6 h-6 text-secondary" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Smart Optimization</h3>
+                <p className="text-muted-foreground">
+                  AI-powered basket optimizer finds the cheapest vendor split considering memberships and shipping.
+                </p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+                className="p-8 rounded-2xl bg-card border hover:shadow-lg transition-shadow"
+              >
+                <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mb-4">
+                  <Bell className="w-6 h-6 text-accent" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Price Alerts</h3>
+                <p className="text-muted-foreground">
+                  Get notified when products drop below your target price or become available again.
+                </p>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-20">
+          <div className="container">
+            <div className="max-w-3xl mx-auto text-center space-y-6 p-12 rounded-3xl glass">
+              <Shield className="w-12 h-12 mx-auto text-primary" />
+              <h2 className="text-3xl md:text-4xl font-bold">
+                Start Saving Today
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                Join thousands of smart shoppers in UAE who save money on every purchase.
+              </p>
+              <Link href="/search">
+                <Button size="lg" className="px-8 h-12 text-base hover:glow-primary transition-all">
+                  Get Started Free
                 </Button>
               </Link>
             </div>
-          ) : (
-            <Button asChild size="sm">
-              <a href={getLoginUrl()}>Login</a>
-            </Button>
-          )}
-        </div>
-
-        {/* Hero Content */}
-        <div className="text-center space-y-4 py-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-4">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">AI-Powered Shopping</span>
           </div>
-          
-          <h2 className="text-4xl sm:text-5xl font-bold leading-tight">
-            Find the Best Prices
-            <br />
-            <span className="text-primary">Across UAE</span>
-          </h2>
-          
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Compare prices from Amazon, Noon, Careem, and Talabat. 
-            Optimize your shopping basket with AI.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
-            <Button asChild size="lg" className="text-base h-12">
-              <Link href="/search">
-                <Search className="h-5 w-5 mr-2" />
-                Start Searching
-              </Link>
-            </Button>
-            
-            <Button asChild size="lg" variant="outline" className="text-base h-12">
-              <Link href="/assistant">
-                <Sparkles className="h-5 w-5 mr-2" />
-                AI Assistant
-              </Link>
-            </Button>
-            
-            {isAuthenticated && (
-              <Button asChild size="lg" variant="outline" className="text-base h-12">
-                <Link href="/basket">
-                  <ShoppingCart className="h-5 w-5 mr-2" />
-                  My Basket
-                </Link>
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Features Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-8">
-          <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardContent className="p-6 space-y-3">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                <TrendingDown className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg">Real-Time Prices</h3>
-              <p className="text-sm text-muted-foreground">
-                Compare live prices across multiple e-commerce platforms instantly
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardContent className="p-6 space-y-3">
-              <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center">
-                <Sparkles className="h-6 w-6 text-accent" />
-              </div>
-              <h3 className="font-semibold text-lg">Smart Optimization</h3>
-              <p className="text-sm text-muted-foreground">
-                AI-powered basket optimizer finds the cheapest vendor split for you
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardContent className="p-6 space-y-3">
-              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                <Bell className="h-6 w-6 text-green-600" />
-              </div>
-              <h3 className="font-semibold text-lg">Price Alerts</h3>
-              <p className="text-sm text-muted-foreground">
-                Get notified when products drop below your target price
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardContent className="p-6 space-y-3">
-              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                <BarChart3 className="h-6 w-6 text-purple-600" />
-              </div>
-              <h3 className="font-semibold text-lg">Membership Savings</h3>
-              <p className="text-sm text-muted-foreground">
-                Factor in your Prime, Noon One, and other memberships
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardContent className="p-6 space-y-3">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                <Zap className="h-6 w-6 text-blue-600" />
-              </div>
-              <h3 className="font-semibold text-lg">Instant Checkout</h3>
-              <p className="text-sm text-muted-foreground">
-                Direct deep links to platform checkout pages for quick purchase
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardContent className="p-6 space-y-3">
-              <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
-                <Search className="h-6 w-6 text-orange-600" />
-              </div>
-              <h3 className="font-semibold text-lg">Smart Search</h3>
-              <p className="text-sm text-muted-foreground">
-                Natural language search understands queries like "keto groceries under 200 AED"
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Supported Platforms */}
-        <div className="pt-12 text-center space-y-4">
-          <p className="text-sm text-muted-foreground">Supported Platforms</p>
-          <div className="flex flex-wrap justify-center gap-6 items-center">
-            {["Amazon UAE", "Noon", "Careem Now", "Talabat Mart"].map((platform) => (
-              <div key={platform} className="px-6 py-3 bg-card border rounded-lg">
-                <span className="font-semibold text-sm">{platform}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* CTA Section */}
-        {!isAuthenticated && (
-          <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 mt-12">
-            <CardContent className="p-8 text-center space-y-4">
-              <h3 className="text-2xl font-bold">Ready to Save Money?</h3>
-              <p className="text-muted-foreground">
-                Join PriceGenie and start finding the best deals across UAE
-              </p>
-              <Button asChild size="lg" className="text-base">
-                <a href={getLoginUrl()}>
-                  Get Started Free
-                </a>
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+        </section>
       </div>
-    </div>
+    </PageTransition>
   );
 }
