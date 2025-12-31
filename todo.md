@@ -106,3 +106,24 @@
 - [ ] Implement image upload and retrieval
 - [ ] Add image optimization and resizing
 - [ ] Prepare for future OCR receipt processing
+
+## Sprint: Real Platform Scrapers (Current)
+- [x] Install Playwright and dependencies
+- [x] Implement Amazon UAE scraper with anti-bot measures
+- [x] Implement Noon scraper with dynamic content handling
+- [x] Implement Talabat scraper
+- [x] Implement Careem scraper
+- [ ] Add proxy rotation support
+- [x] Add rate limiting per platform
+- [x] Add scraper health monitoring
+- [x] Integrate scrapers with existing worker system
+
+## Sprint: Enhanced UI & Design System (Next)
+- [ ] Implement color palette and typography from design-system.md
+- [ ] Add Satoshi and JetBrains Mono fonts
+- [ ] Create animation library with Framer Motion
+- [ ] Enhanced product card with animations
+- [ ] Platform comparison carousel
+- [ ] Price history chart component
+- [ ] Implement glassmorphism components
+- [ ] Add micro-interactions and loading states

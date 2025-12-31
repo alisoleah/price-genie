@@ -521,3 +521,44 @@ export async function addMessage(
     metadata,
   });
 }
+
+// Raw product operations for scrapers
+export async function createRawProduct(data: {
+  platformId: number;
+  rawTitle: string;
+  url: string;
+  imageUrl?: string;
+  rawDescription?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const [result] = await db.insert(rawProducts).values({
+    platformId: data.platformId,
+    rawTitle: data.rawTitle,
+    url: data.url,
+    imageUrl: data.imageUrl,
+    rawDescription: data.rawDescription,
+    matchConfidence: 0,
+  });
+
+  return result.insertId;
+}
+
+export async function createPriceSnapshot(data: {
+  rawProductId: number;
+  price: number;
+  currency: string;
+  availability: 'in_stock' | 'low_stock' | 'out_of_stock';
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db.insert(priceSnapshots).values({
+    rawProductId: data.rawProductId,
+    price: data.price,
+    currency: data.currency,
+    availability: data.availability,
+    scrapedAt: new Date(),
+  });
+}

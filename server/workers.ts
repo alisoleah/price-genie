@@ -108,7 +108,7 @@ class WorkerQueue {
   }
 
   private async handleScrapeTask(task: Task) {
-    const { platformId, category } = task.payload;
+    const { platformId, category, query } = task.payload;
     
     // Create scrape job
     const jobId = await db.createScrapeJob(platformId, category);
@@ -124,18 +124,21 @@ class WorkerQueue {
 
       console.log(`[Scraper] Starting scrape for ${platform.displayName}`);
       
-      // Mock scraping - in production, this would use Playwright/Puppeteer
-      const mockProducts = await this.mockScrape(platform, category);
+      // Use real Playwright scrapers
+      const products = await this.realScrape(platform, query);
       
-      console.log(`[Scraper] Scraped ${mockProducts.length} products from ${platform.displayName}`);
+      console.log(`[Scraper] Scraped ${products.length} products from ${platform.displayName}`);
+      
+      // Save scraped products to database
+      const productIds = await this.saveScrapedProducts(platformId, products);
       
       await db.updateScrapeJobStatus(jobId, 'success', {
-        productsScraped: mockProducts.length,
+        productsScraped: products.length,
       });
       
       // Schedule embedding generation for new products
-      if (mockProducts.length > 0) {
-        this.addTask('embed', { productIds: mockProducts });
+      if (productIds.length > 0) {
+        this.addTask('embed', { productIds });
       }
       
     } catch (error: any) {
@@ -149,18 +152,61 @@ class WorkerQueue {
     }
   }
 
-  private async mockScrape(platform: any, category?: string) {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+  private async realScrape(platform: any, query?: string) {
+    // Import scrapers dynamically to avoid initialization issues
+    const { scraperManager } = await import('./scrapers/ScraperManager');
     
-    // In production, this would:
-    // 1. Use httpx/axios with random user agents
-    // 2. Parse HTML with BeautifulSoup/Cheerio
-    // 3. Extract product data
-    // 4. Handle rate limiting and retries
+    // Map platform name to scraper platform name
+    const platformMap: Record<string, any> = {
+      'Amazon UAE': 'amazon_uae',
+      'Noon': 'noon',
+      'Talabat': 'talabat',
+      'Careem': 'careem',
+    };
     
-    // For MVP, return empty array (data already seeded)
+    const scraperPlatform = platformMap[platform.displayName];
+    if (!scraperPlatform) {
+      throw new Error(`No scraper configured for ${platform.displayName}`);
+    }
+    
+    // If query provided, search for products
+    if (query) {
+      return await scraperManager.searchPlatform(scraperPlatform, query, { maxResults: 10 });
+    }
+    
+    // Otherwise, return empty (would need category-based scraping logic)
     return [];
+  }
+
+  private async saveScrapedProducts(platformId: number, products: any[]) {
+    const productIds: number[] = [];
+    
+    for (const product of products) {
+      try {
+        // Create raw product entry
+        const rawProductId = await db.createRawProduct({
+          platformId,
+          rawTitle: product.rawTitle,
+          url: product.url,
+          imageUrl: product.imageUrl,
+          rawDescription: product.attributes?.description || '',
+        });
+        
+        // Create price snapshot
+        await db.createPriceSnapshot({
+          rawProductId,
+          price: product.price,
+          currency: product.currency,
+          availability: product.availability,
+        });
+        
+        productIds.push(rawProductId);
+      } catch (error) {
+        console.error(`[Scraper] Failed to save product ${product.rawTitle}:`, error);
+      }
+    }
+    
+    return productIds;
   }
 
   private async handleEmbedTask(task: Task) {
