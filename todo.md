@@ -224,3 +224,7 @@
 - [ ] Add breadcrumbs for deep pages
 - [ ] Test all navigation flows
 - [ ] Polish UI consistency across all pages
+
+
+## Bug Fixes
+- [x] Fix nested anchor tag error in Header component (Link wrapping <a> tags)

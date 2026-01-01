@@ -55,12 +55,12 @@ export default function Header() {
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <Link href="/">
-          <a className="flex items-center gap-2 font-bold text-xl hover:opacity-80 transition-opacity">
+          <div className="flex items-center gap-2 font-bold text-xl hover:opacity-80 transition-opacity cursor-pointer">
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
               <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="hidden sm:inline">PriceGenie</span>
-          </a>
+          </div>
         </Link>
 
         {/* Desktop Navigation */}
@@ -69,9 +69,9 @@ export default function Header() {
             const Icon = item.icon;
             return (
               <Link key={item.href} href={item.href}>
-                <a
+                <div
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer",
                     isActive(item.href)
                       ? "bg-primary/10 text-primary"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -79,7 +79,7 @@ export default function Header() {
                 >
                   <Icon className="h-4 w-4" />
                   {item.label}
-                </a>
+                </div>
               </Link>
             );
           })}
@@ -104,27 +104,27 @@ export default function Header() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/profile">
-                    <a className="flex items-center gap-2 cursor-pointer w-full">
+                    <div className="flex items-center gap-2 cursor-pointer w-full">
                       <User className="h-4 w-4" />
                       Profile
-                    </a>
+                    </div>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/notifications">
-                    <a className="flex items-center gap-2 cursor-pointer w-full">
+                    <div className="flex items-center gap-2 cursor-pointer w-full">
                       <Settings className="h-4 w-4" />
                       Notifications
-                    </a>
+                    </div>
                   </Link>
                 </DropdownMenuItem>
                 {user?.role === "admin" && (
                   <DropdownMenuItem asChild>
                     <Link href="/admin">
-                      <a className="flex items-center gap-2 cursor-pointer w-full">
+                      <div className="flex items-center gap-2 cursor-pointer w-full">
                         <Settings className="h-4 w-4" />
                         Admin Dashboard
-                      </a>
+                      </div>
                     </Link>
                   </DropdownMenuItem>
                 )}
@@ -157,10 +157,10 @@ export default function Header() {
                   const Icon = item.icon;
                   return (
                     <Link key={item.href} href={item.href}>
-                      <a
+                      <div
                         onClick={() => setMobileMenuOpen(false)}
                         className={cn(
-                          "flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors",
+                          "flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors cursor-pointer",
                           isActive(item.href)
                             ? "bg-primary/10 text-primary"
                             : "text-foreground hover:bg-muted"
@@ -168,7 +168,7 @@ export default function Header() {
                       >
                         <Icon className="h-5 w-5" />
                         {item.label}
-                      </a>
+                      </div>
                     </Link>
                   );
                 })}
@@ -177,32 +177,32 @@ export default function Header() {
                   <>
                     <div className="border-t my-2" />
                     <Link href="/profile">
-                      <a
+                      <div
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-foreground hover:bg-muted transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-foreground hover:bg-muted transition-colors cursor-pointer"
                       >
                         <User className="h-5 w-5" />
                         Profile
-                      </a>
+                      </div>
                     </Link>
                     <Link href="/notifications">
-                      <a
+                      <div
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-foreground hover:bg-muted transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-foreground hover:bg-muted transition-colors cursor-pointer"
                       >
                         <Settings className="h-5 w-5" />
                         Notifications
-                      </a>
+                      </div>
                     </Link>
                     {user?.role === "admin" && (
                       <Link href="/admin">
-                        <a
+                        <div
                           onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-foreground hover:bg-muted transition-colors"
+                          className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-foreground hover:bg-muted transition-colors cursor-pointer"
                         >
                           <Settings className="h-5 w-5" />
                           Admin Dashboard
-                        </a>
+                        </div>
                       </Link>
                     )}
                     <button
