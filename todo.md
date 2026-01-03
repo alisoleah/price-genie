@@ -242,7 +242,7 @@
 - [x] Implement saved baskets feature with persistence
 - [x] Implement search history tracking
 - [x] Add search suggestions based on history
-- [ ] Add platform availability indicators (in stock, low stock, out of stock)
-- [ ] Add membership discount visualization in price cards
-- [ ] Add basket cost breakdown with shipping calculations
+- [x] Add platform availability indicators (in stock, low stock, out of stock)
+- [x] Add membership discount visualization in price cards
+- [x] Add basket cost breakdown with shipping calculations
 - [ ] Test all new features

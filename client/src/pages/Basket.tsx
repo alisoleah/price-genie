@@ -331,18 +331,47 @@ export default function Basket() {
                       <CardContent className="space-y-4">
                         <div className="grid gap-4">
                           {optimizationResult.platformSplit.map((split: any) => (
-                            <div key={split.platformId} className="space-y-2">
+                            <div key={split.platformId} className="space-y-3 p-4 bg-muted/30 rounded-lg">
                               <div className="flex items-center justify-between">
-                                <Badge variant="outline">{split.platformName}</Badge>
-                                <span className="font-semibold">{split.totalCost.toFixed(2)} AED</span>
+                                <Badge variant="outline" className="text-sm">{split.platformName}</Badge>
+                                <span className="font-bold text-lg">{split.totalCost.toFixed(2)} AED</span>
                               </div>
-                              <ul className="text-sm text-muted-foreground space-y-1">
+                              
+                              {/* Items List */}
+                              <div className="space-y-2">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase">Items</p>
                                 {split.items.map((item: any, idx: number) => (
-                                  <li key={idx}>
-                                    • {item.productName} (x{item.quantity})
-                                  </li>
+                                  <div key={idx} className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">
+                                      {item.productName} × {item.quantity}
+                                    </span>
+                                    <span className="font-medium">{(item.price * item.quantity).toFixed(2)} AED</span>
+                                  </div>
                                 ))}
-                              </ul>
+                              </div>
+                              
+                              {/* Cost Breakdown */}
+                              <div className="space-y-1 pt-2 border-t">
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">Subtotal:</span>
+                                  <span>{split.subtotal.toFixed(2)} AED</span>
+                                </div>
+                                {split.membershipDiscount > 0 && (
+                                  <div className="flex justify-between text-sm text-primary">
+                                    <span>Membership Discount:</span>
+                                    <span>-{split.membershipDiscount.toFixed(2)} AED</span>
+                                  </div>
+                                )}
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">Shipping:</span>
+                                  <span>{split.shippingCost > 0 ? `${split.shippingCost.toFixed(2)} AED` : 'FREE'}</span>
+                                </div>
+                                <div className="flex justify-between font-semibold pt-1 border-t">
+                                  <span>Total:</span>
+                                  <span>{split.totalCost.toFixed(2)} AED</span>
+                                </div>
+                              </div>
+                              
                               <Button variant="outline" size="sm" className="w-full" asChild>
                                 <a href={split.checkoutUrl} target="_blank" rel="noopener noreferrer">
                                   Checkout on {split.platformName}

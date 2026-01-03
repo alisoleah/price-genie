@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { ShoppingCart, TrendingDown, Clock } from "lucide-react";
+import { ShoppingCart, TrendingDown, Clock, Package, AlertTriangle, XCircle, Percent } from "lucide-react";
 import { Link } from "wouter";
 
 interface ProductCardProps {
@@ -16,6 +16,8 @@ interface ProductCardProps {
     name: string;
     price: number;
     staleness: 'fresh' | 'stale' | 'expired';
+    availability?: 'in_stock' | 'low_stock' | 'out_of_stock';
+    membershipDiscount?: number;
   }>;
   category?: string;
 }
@@ -120,19 +122,56 @@ export function ProductCard({
               )}
             </div>
             
-            {/* Freshness Indicator */}
-            <div className="flex items-center gap-2 text-xs">
-              <Clock className="w-3 h-3" />
-              <span className={`
-                ${freshPlatforms.length === platforms.length ? 'text-green-600 dark:text-green-400' : ''}
-                ${freshPlatforms.length === 0 ? 'text-red-600 dark:text-red-400' : ''}
-                ${freshPlatforms.length > 0 && freshPlatforms.length < platforms.length ? 'text-yellow-600 dark:text-yellow-400' : ''}
-              `}>
-                {freshPlatforms.length === platforms.length && 'All prices fresh'}
-                {freshPlatforms.length === 0 && 'Prices need update'}
-                {freshPlatforms.length > 0 && freshPlatforms.length < platforms.length && 
-                  `${freshPlatforms.length}/${platforms.length} fresh`}
-              </span>
+            {/* Availability & Freshness Indicators */}
+            <div className="space-y-2">
+              {/* Availability */}
+              {platforms[0]?.availability && (
+                <div className="flex items-center gap-2 text-xs">
+                  {platforms[0].availability === 'in_stock' && (
+                    <>
+                      <Package className="w-3 h-3 text-green-600" />
+                      <span className="text-green-600 dark:text-green-400 font-medium">In Stock</span>
+                    </>
+                  )}
+                  {platforms[0].availability === 'low_stock' && (
+                    <>
+                      <AlertTriangle className="w-3 h-3 text-yellow-600" />
+                      <span className="text-yellow-600 dark:text-yellow-400 font-medium">Low Stock</span>
+                    </>
+                  )}
+                  {platforms[0].availability === 'out_of_stock' && (
+                    <>
+                      <XCircle className="w-3 h-3 text-red-600" />
+                      <span className="text-red-600 dark:text-red-400 font-medium">Out of Stock</span>
+                    </>
+                  )}
+                </div>
+              )}
+              
+              {/* Membership Discount */}
+              {platforms.some(p => p.membershipDiscount && p.membershipDiscount > 0) && (
+                <div className="flex items-center gap-2 text-xs">
+                  <Percent className="w-3 h-3 text-primary" />
+                  <span className="text-primary font-medium">
+                    Extra {Math.max(...platforms.map(p => p.membershipDiscount || 0))}% off with membership
+                  </span>
+                </div>
+              )}
+              
+              {/* Freshness */}
+              <div className="flex items-center gap-2 text-xs">
+                <Clock className="w-3 h-3" />
+                <span className={`
+                  ${freshPlatforms.length === platforms.length ? 'text-green-600 dark:text-green-400' : ''}
+                  ${freshPlatforms.length === 0 ? 'text-red-600 dark:text-red-400' : ''}
+                  ${freshPlatforms.length > 0 && freshPlatforms.length < platforms.length ? 'text-yellow-600 dark:text-yellow-400' : ''}
+                `}>
+                  {freshPlatforms.length === platforms.length && 'All prices fresh'}
+                  {freshPlatforms.length === 0 && 'Prices need update'}
+                  {freshPlatforms.length > 0 && freshPlatforms.length < platforms.length && 
+                    `${freshPlatforms.length}/${platforms.length} fresh`}
+                </span>
+              </div>
             </div>
           </CardContent>
           
