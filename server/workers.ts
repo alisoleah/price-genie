@@ -183,12 +183,28 @@ class WorkerQueue {
     
     for (const product of products) {
       try {
+        // Download and upload image to S3 if available
+        let s3ImageUrl = product.imageUrl;
+        if (product.imageUrl && product.imageUrl.startsWith('http')) {
+          try {
+            const { downloadAndUploadImage } = await import('./imageStorage');
+            const result = await downloadAndUploadImage(product.imageUrl, 0); // temp ID
+            if (result) {
+              s3ImageUrl = result.url;
+              console.log(`[Scraper] Uploaded image to S3: ${s3ImageUrl}`);
+            }
+          } catch (imgError) {
+            console.error(`[Scraper] Failed to upload image for ${product.rawTitle}:`, imgError);
+            // Continue with original URL if upload fails
+          }
+        }
+        
         // Create raw product entry
         const rawProductId = await db.createRawProduct({
           platformId,
           rawTitle: product.rawTitle,
           url: product.url,
-          imageUrl: product.imageUrl,
+          imageUrl: s3ImageUrl,
           rawDescription: product.attributes?.description || '',
         });
         
