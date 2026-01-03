@@ -9,6 +9,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { ProductGridSkeleton } from "@/components/ProductCardSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { PageTransition, StaggerContainer, StaggerItem } from "@/components/PageTransition";
+import { toast } from "sonner";
 
 export default function Search() {
   const [query, setQuery] = useState("");
@@ -21,7 +22,12 @@ export default function Search() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    if (query.trim().length < 2) {
+      toast.error("Please enter at least 2 characters to search");
+      return;
+    }
     setSearchTerm(query);
+    toast.success(`Searching for "${query}"...`);
   };
 
   return (

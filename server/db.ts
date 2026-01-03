@@ -757,3 +757,32 @@ export async function getPriceStats(productId: number, days: number = 30): Promi
   
   return { lowest, highest, average, current, trend };
 }
+
+
+// Get products with stale prices for priority re-scraping
+export async function getPriorityRescrapeProducts(limit: number = 100) {
+  const db = await getDb();
+  if (!db) return [];
+
+  // Get products with stale or expired prices (older than 24 hours)
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  
+  try {
+    const staleProducts = await db
+      .select({
+        id: rawProducts.id,
+        matchedProductId: rawProducts.matchedProductId,
+        platformId: rawProducts.platformId,
+        updatedAt: rawProducts.updatedAt,
+      })
+      .from(rawProducts)
+      .where(sql`${rawProducts.updatedAt} < ${twentyFourHoursAgo}`)
+      .orderBy(sql`${rawProducts.updatedAt} ASC`)
+      .limit(limit);
+
+    return staleProducts;
+  } catch (error) {
+    console.error("[Database] Failed to get priority rescrape products:", error);
+    return [];
+  }
+}
