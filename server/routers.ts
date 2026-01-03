@@ -42,13 +42,16 @@ export const appRouter = router({
         platformIds: z.array(z.number()).optional(),
         maxPrice: z.number().optional(),
       }))
-      .query(async ({ input }) => {
+      .query(async ({ ctx, input }) => {
         const products = await db.searchProducts(input.query, {
           category: input.category,
           brand: input.brand,
           platformIds: input.platformIds,
           maxPrice: input.maxPrice,
         });
+        
+        // Record search history
+        await db.recordSearch(ctx.user?.id || null, input.query, products.length);
         
         return products;
       }),
@@ -219,6 +222,17 @@ export const appRouter = router({
         await db.deletePriceAlert(input.alertId, ctx.user.id);
         return { success: true };
       }),
+  }),
+
+  // Search history and suggestions
+  searchHistory: router({  
+    getSuggestions: publicProcedure.query(async ({ ctx }) => {
+      return db.getSearchSuggestions(ctx.user?.id || null, 5);
+    }),
+
+    getUserHistory: protectedProcedure.query(async ({ ctx }) => {
+      return db.getUserSearchHistory(ctx.user.id, 20);
+    }),
   }),
 
   // Deep link generation

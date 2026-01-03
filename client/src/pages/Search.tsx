@@ -14,11 +14,14 @@ import { toast } from "sonner";
 export default function Search() {
   const [query, setQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const { data: searchResults, isLoading } = trpc.products.search.useQuery(
     { query: searchTerm },
     { enabled: searchTerm.length > 0 }
   );
+
+  const { data: suggestions } = trpc.searchHistory.getSuggestions.useQuery();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +30,14 @@ export default function Search() {
       return;
     }
     setSearchTerm(query);
+    setShowSuggestions(false);
     toast.success(`Searching for "${query}"...`);
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setQuery(suggestion);
+    setSearchTerm(suggestion);
+    setShowSuggestions(false);
   };
 
   return (
@@ -58,10 +68,31 @@ export default function Search() {
                 <Input
                   type="text"
                   placeholder="Search for products across Amazon, Noon, Careem, Talabat..."
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="pl-12 h-14 text-base"
                 />
+                
+                {/* Search Suggestions Dropdown */}
+                {showSuggestions && suggestions && suggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-card border rounded-lg shadow-lg z-50 overflow-hidden">
+                    <div className="p-2 space-y-1">
+                      {suggestions.map((suggestion, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="w-full text-left px-4 py-2 rounded hover:bg-accent transition-colors text-sm"
+                        >
+                          <SearchIcon className="inline h-4 w-4 mr-2 text-muted-foreground" />
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               <Button 
                 type="submit" 

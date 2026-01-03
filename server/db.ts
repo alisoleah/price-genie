@@ -786,3 +786,57 @@ export async function getPriorityRescrapeProducts(limit: number = 100) {
     return [];
   }
 }
+
+
+
+
+export async function getSearchSuggestions(userId: number | null, limit: number = 5) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { searchHistory } = await import("../drizzle/schema");
+  
+  // Get recent unique searches for this user
+  if (userId) {
+    const results = await db
+      .select({
+        query: searchHistory.query,
+        count: sql<number>`COUNT(*)`,
+        lastSearched: sql<Date>`MAX(${searchHistory.createdAt})`,
+      })
+      .from(searchHistory)
+      .where(eq(searchHistory.userId, userId))
+      .groupBy(searchHistory.query)
+      .orderBy(sql`MAX(${searchHistory.createdAt}) DESC`)
+      .limit(limit);
+    
+    return results.map(r => r.query);
+  }
+  
+  // Get popular searches globally if no user
+  const results = await db
+    .select({
+      query: searchHistory.query,
+      count: sql<number>`COUNT(*)`,
+    })
+    .from(searchHistory)
+    .groupBy(searchHistory.query)
+    .orderBy(sql`COUNT(*) DESC`)
+    .limit(limit);
+  
+  return results.map(r => r.query);
+}
+
+export async function getUserSearchHistory(userId: number, limit: number = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { searchHistory } = await import("../drizzle/schema");
+  
+  return await db
+    .select()
+    .from(searchHistory)
+    .where(eq(searchHistory.userId, userId))
+    .orderBy(sql`${searchHistory.createdAt} DESC`)
+    .limit(limit);
+}

@@ -6,28 +6,66 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
-  ArrowLeft, 
   ShoppingCart, 
   Sparkles, 
   TrendingDown,
   ExternalLink,
-  Trash2
+  Trash2,
+  Plus,
+  Minus
 } from "lucide-react";
 import { toast } from "sonner";
 import { getLoginUrl } from "@/const";
+
 
 export default function Basket() {
   const { user, isAuthenticated } = useAuth();
   const [optimizing, setOptimizing] = useState(false);
   const [optimizationResult, setOptimizationResult] = useState<any>(null);
+  const [newBasketName, setNewBasketName] = useState("");
+  const [selectedBasketId, setSelectedBasketId] = useState<number | null>(null);
+  const utils = trpc.useUtils();
 
-  // Mock basket items for demo
-  const mockBasketItems = [
-    { id: 1, productId: 1, productName: "Apple iPhone 13 Pro Max 256GB Blue", quantity: 1 },
-    { id: 2, productId: 6, productName: "Almarai Fresh Milk Full Cream 1L", quantity: 2 },
-    { id: 3, productId: 7, productName: "Organic Eggs Large 12 Pack", quantity: 1 },
-  ];
+  // Fetch user's baskets
+  const { data: baskets, isLoading: basketsLoading } = trpc.baskets.list.useQuery(
+    undefined,
+    { enabled: isAuthenticated }
+  );
+
+  // Fetch selected basket with items
+  const { data: currentBasket, isLoading: basketLoading } = trpc.baskets.get.useQuery(
+    { basketId: selectedBasketId! },
+    { enabled: selectedBasketId !== null }
+  );
+
+  // Mutations
+  const createBasketMutation = trpc.baskets.create.useMutation({
+    onSuccess: (data) => {
+      utils.baskets.list.invalidate();
+      setSelectedBasketId(data.basketId);
+      setNewBasketName("");
+      toast.success("Basket created!");
+    },
+    onError: () => {
+      toast.error("Failed to create basket");
+    },
+  });
+
+  const removeItemMutation = trpc.baskets.removeItem.useMutation({
+    onSuccess: () => {
+      utils.baskets.get.invalidate();
+      toast.success("Item removed");
+    },
+  });
+
+  const updateQuantityMutation = trpc.baskets.updateQuantity.useMutation({
+    onSuccess: () => {
+      utils.baskets.get.invalidate();
+    },
+  });
 
   const optimizeMutation = trpc.baskets.optimize.useMutation({
     onSuccess: (data) => {
@@ -41,36 +79,39 @@ export default function Basket() {
     },
   });
 
+  const handleCreateBasket = () => {
+    if (!newBasketName.trim()) {
+      toast.error("Please enter a basket name");
+      return;
+    }
+    createBasketMutation.mutate({ name: newBasketName });
+  };
+
   const handleOptimize = () => {
-    if (!isAuthenticated) {
-      toast.error("Please login to optimize your basket");
+    if (!currentBasket || !currentBasket.items.length) {
+      toast.error("Add items to your basket first");
       return;
     }
 
     setOptimizing(true);
     optimizeMutation.mutate({
-      items: mockBasketItems.map(item => ({
+      items: currentBasket.items.map(item => ({
         productId: item.productId,
         quantity: item.quantity,
       })),
     });
   };
 
+  const handleUpdateQuantity = (itemId: number, currentQty: number, delta: number) => {
+    const newQty = currentQty + delta;
+    if (newQty < 1) return;
+    updateQuantityMutation.mutate({ itemId, quantity: newQty });
+  };
+
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="border-b">
-          <div className="container py-4">
-            <Link href="/">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-            </Link>
-          </div>
-        </header>
-
-        <div className="container py-12 text-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
           <ShoppingCart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-2xl font-bold mb-2">Login to view your basket</h2>
           <p className="text-muted-foreground mb-6">
@@ -84,168 +125,254 @@ export default function Basket() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="container py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/search">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-            </Link>
-            <h1 className="text-xl font-bold">My Basket</h1>
-            <div className="w-20" /> {/* Spacer for centering */}
-          </div>
-        </div>
-      </header>
+  // Auto-select first basket if none selected
+  if (!selectedBasketId && baskets && baskets.length > 0) {
+    setSelectedBasketId(baskets[0]!.id);
+  }
 
-      <div className="container py-6 space-y-6">
-        {/* Basket Items */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ShoppingCart className="h-5 w-5" />
-              Items ({mockBasketItems.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {mockBasketItems.map((item) => (
-              <div key={item.id} className="flex items-center gap-3 pb-3 border-b last:border-0 last:pb-0">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-sm line-clamp-2">{item.productName}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Qty: {item.quantity}</p>
-                </div>
-                <Button variant="ghost" size="icon" className="text-destructive">
-                  <Trash2 className="h-4 w-4" />
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="container py-8 max-w-6xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">My Baskets</h1>
+            <p className="text-muted-foreground">
+              Manage your shopping lists and optimize across platforms
+            </p>
+          </div>
+          
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                New Basket
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Basket</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <Input
+                  placeholder="e.g., Weekly Groceries"
+                  value={newBasketName}
+                  onChange={(e) => setNewBasketName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleCreateBasket()}
+                />
+                <Button onClick={handleCreateBasket} className="w-full">
+                  Create Basket
                 </Button>
               </div>
-            ))}
-          </CardContent>
-        </Card>
+            </DialogContent>
+          </Dialog>
+        </div>
 
-        {/* Optimize Button */}
-        <Button 
-          className="w-full h-12 text-base" 
-          size="lg"
-          onClick={handleOptimize}
-          disabled={optimizing}
-        >
-          <Sparkles className="h-5 w-5 mr-2" />
-          {optimizing ? "Optimizing..." : "Optimize Basket"}
-        </Button>
-
-        {/* Optimization Results */}
-        {optimizationResult && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Optimized Shopping Plan</h2>
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Total</p>
-                <p className="text-2xl font-bold text-primary">
-                  {(optimizationResult.totalCost / 100).toFixed(2)} AED
-                </p>
-              </div>
+        {basketsLoading ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Loading baskets...</p>
+          </div>
+        ) : !baskets || baskets.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+            <ShoppingCart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+            <h2 className="text-2xl font-bold mb-2">No baskets yet</h2>
+            <p className="text-muted-foreground mb-6">
+              Create your first basket to start shopping
+            </p>
+            <div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Basket
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create New Basket</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <Input
+                      placeholder="e.g., Weekly Groceries"
+                      value={newBasketName}
+                      onChange={(e) => setNewBasketName(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleCreateBasket()}
+                    />
+                    <Button onClick={handleCreateBasket} className="w-full">
+                      Create Basket
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+        ) : (
+          <div className="grid lg:grid-cols-[300px_1fr] gap-8">
+            {/* Basket List Sidebar */}
+            <div className="space-y-2">
+              <h3 className="font-semibold mb-4">Your Baskets</h3>
+              {baskets.map((basket) => (
+                <Button
+                  key={basket.id}
+                  variant={selectedBasketId === basket.id ? "default" : "outline"}
+                  className="w-full justify-start"
+                  onClick={() => setSelectedBasketId(basket.id)}
+                >
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  {basket.name}
+                </Button>
+              ))}
             </div>
 
-            {optimizationResult.warnings && optimizationResult.warnings.length > 0 && (
-              <Card className="bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
-                <CardContent className="p-4">
-                  <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300 mb-2">
-                    Optimization Notes:
-                  </p>
-                  <ul className="text-sm text-yellow-700 dark:text-yellow-400 space-y-1">
-                    {optimizationResult.warnings.map((warning: string, i: number) => (
-                      <li key={i}>• {warning}</li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            )}
-
-            {optimizationResult.vendorSplits.map((vendor: any, index: number) => (
-              <Card key={index}>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="capitalize">{vendor.platformName}</span>
-                    <Badge variant="secondary">
-                      {vendor.items.length} item{vendor.items.length > 1 ? 's' : ''}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {vendor.items.map((item: any, i: number) => (
-                    <div key={i} className="flex justify-between text-sm">
-                      <span className="line-clamp-1">{item.productName}</span>
-                      <span className="font-medium">
-                        {(item.subtotal / 100).toFixed(2)} AED
-                      </span>
-                    </div>
-                  ))}
-
-                  <Separator />
-
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Subtotal</span>
-                      <span>{(vendor.subtotal / 100).toFixed(2)} AED</span>
-                    </div>
-                    
-                    {vendor.discount > 0 && (
-                      <div className="flex justify-between text-green-600">
-                        <span>Discount</span>
-                        <span>-{(vendor.discount / 100).toFixed(2)} AED</span>
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Shipping</span>
-                      <span>
-                        {vendor.shipping === 0 ? (
-                          <span className="text-green-600">FREE</span>
-                        ) : (
-                          `${(vendor.shipping / 100).toFixed(2)} AED`
-                        )}
-                      </span>
-                    </div>
-
-                    <Separator />
-
-                    <div className="flex justify-between font-semibold text-base">
-                      <span>Total</span>
-                      <span className="text-primary">
-                        {(vendor.total / 100).toFixed(2)} AED
-                      </span>
-                    </div>
-                  </div>
-
-                  <Button className="w-full" variant="outline">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Checkout on {vendor.platformName}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-
-            {/* Savings Summary */}
-            <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <TrendingDown className="h-5 w-5 text-green-600" />
-                  <div>
-                    <p className="font-semibold text-green-800 dark:text-green-300">
-                      Optimized for best prices!
-                    </p>
-                    <p className="text-sm text-green-700 dark:text-green-400">
-                      Shopping across {optimizationResult.vendorSplits.length} platform
-                      {optimizationResult.vendorSplits.length > 1 ? 's' : ''} to save you money
-                    </p>
-                  </div>
+            {/* Basket Content */}
+            <div className="space-y-6">
+              {basketLoading ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">Loading basket...</p>
                 </div>
-              </CardContent>
-            </Card>
+              ) : !currentBasket ? (
+                <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                  <ShoppingCart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                  <h2 className="text-2xl font-bold mb-2">Select a basket</h2>
+                  <p className="text-muted-foreground">
+                    Choose a basket from the sidebar to view its contents
+                  </p>
+                </div>
+              ) : currentBasket.items.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                  <ShoppingCart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                  <h2 className="text-2xl font-bold mb-2">Basket is empty</h2>
+                  <p className="text-muted-foreground mb-6">
+                    Add products from the search page to start shopping
+                  </p>
+                  <Button asChild>
+                    <Link href="/search">Browse Products</Link>
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {/* Basket Items */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <ShoppingCart className="h-5 w-5" />
+                        {currentBasket.name}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {currentBasket.items.map((item) => (
+                        <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                          <img
+                            src={item.imageUrl || "/placeholder-product.png"}
+                            alt={item.productName}
+                            className="w-16 h-16 object-cover rounded"
+                          />
+                          <div className="flex-1">
+                            <h4 className="font-medium">{item.productName}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {item.brand} • {item.category}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity, -1)}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                            <span className="w-8 text-center font-medium">{item.quantity}</span>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity, 1)}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => removeItemMutation.mutate({ itemId: item.id })}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+
+                  {/* Optimize Button */}
+                  <Button
+                    size="lg"
+                    className="w-full"
+                    onClick={handleOptimize}
+                    disabled={optimizing}
+                  >
+                    {optimizing ? (
+                      "Optimizing..."
+                    ) : (
+                      <>
+                        <Sparkles className="h-5 w-5 mr-2" />
+                        Optimize Basket
+                      </>
+                    )}
+                  </Button>
+
+                  {/* Optimization Results */}
+                  {optimizationResult && (
+                    <Card className="border-primary">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-primary">
+                          <TrendingDown className="h-5 w-5" />
+                          Optimization Results
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid gap-4">
+                          {optimizationResult.platformSplit.map((split: any) => (
+                            <div key={split.platformId} className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <Badge variant="outline">{split.platformName}</Badge>
+                                <span className="font-semibold">{split.totalCost.toFixed(2)} AED</span>
+                              </div>
+                              <ul className="text-sm text-muted-foreground space-y-1">
+                                {split.items.map((item: any, idx: number) => (
+                                  <li key={idx}>
+                                    • {item.productName} (x{item.quantity})
+                                  </li>
+                                ))}
+                              </ul>
+                              <Button variant="outline" size="sm" className="w-full" asChild>
+                                <a href={split.checkoutUrl} target="_blank" rel="noopener noreferrer">
+                                  Checkout on {split.platformName}
+                                  <ExternalLink className="h-3 w-3 ml-2" />
+                                </a>
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+
+                        <Separator />
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>Total Cost:</span>
+                            <span className="font-semibold">{optimizationResult.totalCost.toFixed(2)} AED</span>
+                          </div>
+                          {optimizationResult.totalSavings > 0 && (
+                            <div className="flex justify-between text-sm text-primary">
+                              <span>Total Savings:</span>
+                              <span className="font-semibold">{optimizationResult.totalSavings.toFixed(2)} AED</span>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         )}
       </div>
